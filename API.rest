@@ -1,0 +1,9 @@
+# GET
+POST "http://localhost:8000/api/authify/login"
+Accept: application/json
+Content-Type: application/json
+
+{
+  "employeeID": "Login successful",
+  "password": "Login successful"
+}
