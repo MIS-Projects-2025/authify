@@ -58,7 +58,8 @@ class AuthController extends Controller
             'samesite' => 'Lax',
         ]);
 
-        return redirect($request->redirect . '?token=' . $emp_data['token']);
+        // return redirect($request->redirect . '?token=' . $emp_data['token']);
+        return redirect($request->redirect . '?key=' . $emp_data['token']);
     }
 
     public function validate(Request $request)
