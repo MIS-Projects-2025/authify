@@ -58,7 +58,6 @@ class AuthController extends Controller
             'samesite' => 'Lax',
         ]);
 
-        // return redirect($request->redirect . '?token=' . $emp_data['token']);
         return redirect($request->redirect . '?key=' . $emp_data['token']);
     }
 
@@ -107,6 +106,23 @@ class AuthController extends Controller
     {
         $this->purgeOverstayingTokens();
 
+        // CHECK IF KEY IS ALREADY SET
+        $hasKeyParam = false;
+
+        if ($request->query('redirect')) {
+            $parsedUrl = parse_url($request->query('redirect'));
+
+            if (isset($parsedUrl['query'])) {
+                parse_str($parsedUrl['query'], $queryParams);
+                $hasKeyParam = array_key_exists('key', $queryParams);
+            }
+
+            if ($hasKeyParam) {
+                return redirect($request->query('redirect'));
+            }
+        }
+        // CHECK IF KEY IS ALREADY SET
+
         if (!$request->query('redirect')) {
             return view('invalid');
         }
@@ -118,7 +134,7 @@ class AuthController extends Controller
             $record = DB::table('authify_sessions')->where('token', $token)->first();
 
             if ($record) {
-                return redirect($request->query('redirect') . '?token=' . $token);
+                return redirect($request->query('redirect') . '?key=' . $token);
             }
         }
 
