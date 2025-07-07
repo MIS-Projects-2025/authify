@@ -3,14 +3,8 @@
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
-// Route::redirect('/', "/authify/login");
-
-// Route::get('/authify/login', [AuthController::class, 'loginForm'])->name('sso.login');
-// Route::post('/authify/login', [AuthController::class, 'Login']);
-// Route::get('/authify/logout', [AuthController::class, 'logout'])->name('sso.logout');
-
 Route::redirect('/', " /login");
 
 Route::get('/login', [AuthController::class, 'loginForm'])->name('sso.login');
-Route::post(' /login', [AuthController::class, 'Login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::get('/logout', [AuthController::class, 'logout'])->name('sso.logout');

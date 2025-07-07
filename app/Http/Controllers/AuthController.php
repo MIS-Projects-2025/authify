@@ -28,11 +28,9 @@ class AuthController extends Controller
             ->first();
 
         if (!$employee || !in_array($credentials['password'], ['123123', '201810961', $employee->PASSWRD])) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid credentials.',
-                'data' => null,
-            ]);
+            return back()->with([
+                'message' => 'Invalid employee ID or password.',
+            ])->withInput();
         }
 
         $emp_data = [

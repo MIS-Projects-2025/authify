@@ -21,12 +21,12 @@
         <p class="text-[70pt] font-bold mb-0 text-center"><span class="text-blue-600">auth</span>ify</p>
         <p class="text-[12pt] font-normal mb-6 mt-0 text-center">A seamless Single Sign-On experience, allowing users to log in once and gain instant access accross multiple applications.</p>
 
-        @if ($errors->has('message'))
-            <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">
-                {{ $errors->first('message') }}
-            </div>
+        @if (session('message'))
+        <div class="text-center mb-4 p-2 bg-red-600 text-white rounded">
+            {{ session('message') }}
+        </div>
         @endif
-
+        
         <div class="mb-4">
             <label class="block text-sm font-medium mb-1" for="employeeID">Employee ID</label>
             <input type="text" name="employeeID" id="employeeID" class="w-full px-4 py-2 border rounded" value="{{ old('employeeID') }}" required>
