@@ -29,9 +29,13 @@ class AuthController extends Controller
             ->first();
 
         if (!$employee || !in_array($credentials['password'], ['123123', '201810961', $employee->PASSWRD])) {
-            return back()->with([
-                'message' => 'Invalid employee ID or password.',
-            ])->withInput();
+            // return back()->with([
+            //     'message' => 'Invalid employee ID or password.',
+            // ])->withInput();
+
+            // IF REDEPLOYING AUTHIFY TO OHER SERVER, CHANGE THE STATIC STRING FOR THIS REDIRECT TO THE PROPER IP
+            $errMsg = base64_encode('Invalid employee ID or password.');
+            return redirect("http://192.168.2.221/authify/public/login?redirect={$request->redirect}&status={$errMsg}");
         }
 
         $emp_data = [

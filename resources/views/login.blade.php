@@ -21,9 +21,9 @@
         <p class="text-[70pt] font-bold mb-0 text-center"><span class="text-blue-600">auth</span>ify</p>
         <p class="text-[12pt] font-normal mb-6 mt-0 text-center">A seamless Single Sign-On experience, allowing users to log in once and gain instant access accross multiple applications.</p>
 
-        @if (session('message'))
+        @if (request('status'))
         <div class="text-center mb-4 p-2 bg-red-600 text-white rounded">
-            {{ session('message') }}
+           {{ base64_decode(request('status')) }}
         </div>
         @endif
         
