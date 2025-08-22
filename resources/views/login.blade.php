@@ -15,7 +15,7 @@
 </head>
 <body class=" flex items-center justify-center h-screen">
     <form method="POST" action="{{ route('login') }}" class="w-[450px]">
-        @csrf
+
         <input type="hidden" name="redirect" value="{{ $redirect }}">
 
         <p class="text-[70pt] font-bold mb-0 text-center"><span class="text-blue-600">auth</span>ify</p>
