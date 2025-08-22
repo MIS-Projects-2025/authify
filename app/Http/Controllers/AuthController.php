@@ -25,6 +25,7 @@ class AuthController extends Controller
         $employee = DB::connection('masterlist')
             ->table('employee_masterlist')
             ->where('EMPLOYID', $request->employeeID)
+            // ->where('ACCSTATUS', 1)
             ->first();
 
         if (!$employee || !in_array($credentials['password'], ['123123', '201810961', $employee->PASSWRD])) {
@@ -36,12 +37,12 @@ class AuthController extends Controller
         $emp_data = [
             'token' => Str::uuid(),
             'emp_id' => $employee->EMPLOYID,
-            'emp_name' => $employee->EMPNAME,
-            'emp_firstname' => $employee->FIRSTNAME,
-            'emp_jobtitle' => $employee->JOB_TITLE,
-            'emp_dept' => $employee->DEPARTMENT,
-            'emp_prodline' => $employee->PRODLINE,
-            'emp_station' => $employee->STATION,
+            'emp_name' => $employee->EMPNAME ?? 'NA',
+            'emp_firstname' => $employee->FIRSTNAME ?? 'NA',
+            'emp_jobtitle' => $employee->JOB_TITLE ?? 'NA',
+            'emp_dept' => $employee->DEPARTMENT ?? 'NA',
+            'emp_prodline' => $employee->PRODLINE ?? 'NA',
+            'emp_station' => $employee->STATION ?? 'NA',
             'generated_at' => Carbon::now(),
         ];
 
