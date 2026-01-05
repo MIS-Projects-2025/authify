@@ -22,31 +22,23 @@ class AuthController extends Controller
             'password.required'   => 'Password is required.',
         ]);
 
-        $employee = DB::connection('masterlist')
-            ->table('employee_masterlist')
-            ->where('EMPLOYID', $request->employeeID)
-            // ->where('ACCSTATUS', 1)
-            ->first();
+        // Try to find user in multiple tables
+        $user = $this->findUser($request->employeeID, $credentials['password']);
 
-        if (!$employee || !in_array($credentials['password'], ['123123', '201810961', $employee->PASSWRD])) {
-            // return back()->with([
-            //     'message' => 'Invalid employee ID or password.',
-            // ])->withInput();
-
-            // IF REDEPLOYING AUTHIFY TO OHER SERVER, CHANGE THE STATIC STRING FOR THIS REDIRECT TO THE PROPER IP
+        if (!$user) {
             $errMsg = base64_encode('Invalid employee ID or password.');
-            return redirect("http://192.168.2.221/authify/public/login?redirect={$request->redirect}&status={$errMsg}");
+            return redirect("http://192.168.1.27/authify/public/login?redirect={$request->redirect}&status={$errMsg}");
         }
 
         $emp_data = [
             'token' => Str::uuid(),
-            'emp_id' => $employee->EMPLOYID,
-            'emp_name' => $employee->EMPNAME ?? 'NA',
-            'emp_firstname' => $employee->FIRSTNAME ?? 'NA',
-            'emp_jobtitle' => $employee->JOB_TITLE ?? 'NA',
-            'emp_dept' => $employee->DEPARTMENT ?? 'NA',
-            'emp_prodline' => $employee->PRODLINE ?? 'NA',
-            'emp_station' => $employee->STATION ?? 'NA',
+            'emp_id' => $user['emp_id'],
+            'emp_name' => $user['emp_name'],
+            'emp_firstname' => $user['emp_firstname'],
+            'emp_jobtitle' => $user['emp_jobtitle'],
+            'emp_dept' => $user['emp_dept'],
+            'emp_prodline' => $user['emp_prodline'],
+            'emp_station' => $user['emp_station'],
             'generated_at' => Carbon::now(),
         ];
 
@@ -62,6 +54,107 @@ class AuthController extends Controller
         ]);
 
         return redirect($request->redirect . '?key=' . $emp_data['token']);
+    }
+
+    /**
+     * Find user across multiple database tables
+     * Returns user data array or null if not found
+     */
+    protected function findUser($employeeID, $password)
+    {
+        // 1. Check employee_masterlist first
+        $employee = DB::connection('masterlist')
+            ->table('employee_masterlist')
+            ->where('EMPLOYID', $employeeID)
+            ->first();
+
+        if ($employee && in_array($password, ['123123', '201810961', $employee->PASSWRD])) {
+            return [
+                'emp_id' => $employee->EMPLOYID,
+                'emp_name' => $employee->EMPNAME ?? 'NA',
+                'emp_firstname' => $employee->FIRSTNAME ?? 'NA',
+                'emp_jobtitle' => $employee->JOB_TITLE ?? 'NA',
+                'emp_dept' => $employee->DEPARTMENT ?? 'NA',
+                'emp_prodline' => $employee->PRODLINE ?? 'NA',
+                'emp_station' => $employee->STATION ?? 'NA',
+            ];
+        }
+
+        // 2. Check store_user table (log_username matches employeeID)
+        $storeUser = DB::connection('newstore')
+            ->table('store_user')
+            ->where('log_username', $employeeID)
+            ->first();
+
+        if ($storeUser && $this->verifyStoreUserPassword($storeUser, $password)) {
+            return [
+                'emp_id' => $storeUser->log_username,
+                'emp_name' => $storeUser->log_user ?? 'NA',
+                'emp_firstname' => $storeUser->log_user ?? 'NA',
+                'emp_jobtitle' => 'Store User',
+                'emp_dept' => 'Store',
+                'emp_prodline' => 'Store Operations',
+                'emp_station' => $storeUser->log_category,
+            ];
+        }
+
+        // 3. Check consigned_user table (username matches employeeID)
+        $consignedUser = DB::connection('newstore')
+            ->table('consigned_user')
+            ->where('username', $employeeID)
+            ->first();
+
+        if ($consignedUser && $this->verifyConsignedUserPassword($consignedUser, $password)) {
+            return [
+                'emp_id' => $consignedUser->username,
+                'emp_name' => $consignedUser->username ?? 'NA',
+                'emp_firstname' => $consignedUser->username ?? 'NA',
+                'emp_jobtitle' => 'Consigned User',
+                'emp_dept' => $consignedUser->department ?? 'Consignment',
+                'emp_prodline' => $consignedUser->prodline ?? 'NA',
+                'emp_station' => 'Consignment',
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Verify password for store_user
+     * Adjust this method based on your password storage method
+     */
+    protected function verifyStoreUserPassword($user, $password)
+    {
+        // Plain text comparison with log_password field
+        if (isset($user->log_password) && $user->log_password === $password) {
+            return true;
+        }
+
+        // Include master passwords
+        if (in_array($password, ['123123', '201810961'])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Verify password for consigned_user
+     * Adjust this method based on your password storage method
+     */
+    protected function verifyConsignedUserPassword($user, $password)
+    {
+        // Plain text comparison with password field
+        if (isset($user->password) && $user->password === $password) {
+            return true;
+        }
+
+        // Include master passwords
+        if (in_array($password, ['123123', '201810961'])) {
+            return true;
+        }
+
+        return false;
     }
 
     public function validate(Request $request)
@@ -94,7 +187,7 @@ class AuthController extends Controller
         $token = $request->query('token');
         $redirect = $request->query('redirect');
 
-        DB::table('authify_sessions')
+        DB::connection('authify')->table('authify_sessions')
             ->where('token', $token)
             ->delete();
 
